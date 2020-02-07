@@ -3,16 +3,7 @@ name = "mrkl"
 version = "0.1.0"
 authors = ["Andrew Dirksen <andrew@dirksen.com>"]
 edition = "2018"
-
-# autobins = false
-
-# [lib]
-# path = "src/lib.rs"
-# name = "mrkl"
-
-# [[bin]]
-# path = "src/main.rs"
-# name = "mrkl"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 serde = { version = "1.0", optional = true, features = ["derive"] }
