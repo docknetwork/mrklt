@@ -4,8 +4,28 @@ version = "0.1.0"
 authors = ["Andrew Dirksen <andrew@dirksen.com>"]
 edition = "2018"
 
+# autobins = false
+
+# [lib]
+# path = "src/lib.rs"
+# name = "mrkl"
+
+# [[bin]]
+# path = "src/main.rs"
+# name = "mrkl"
+
 [dependencies]
 serde = { version = "1.0", optional = true, features = ["derive"] }
+structopt = "0.3.9"
+hex = "0.4.0"
+
+blake2 = "0.8.1"
+groestl = "0.8.0"
+ripemd160 = "0.8.0"
+ripemd320 = "0.8.0"
+sha2 = "0.8.1"
+sha3 = "0.8.2"
+whirlpool = "0.8.1"
 
 [dev-dependencies]
 blake2 = "0.8.1"

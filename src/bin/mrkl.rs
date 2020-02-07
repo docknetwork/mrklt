@@ -1,3 +1,0 @@
-use mrkl;
-
-fn main() {}
