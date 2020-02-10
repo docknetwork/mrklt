@@ -82,7 +82,7 @@ struct Hash(Vec<u8>);
 
 impl FromStr for Hash {
     type Err = hex::FromHexError;
-    fn from_str(a: &str) -> Result<Self, hex::FromHexError> {
+    fn from_str(a: &str) -> Result<Self, Self::Err> {
         hex::decode(a).map(Self)
     }
 }
