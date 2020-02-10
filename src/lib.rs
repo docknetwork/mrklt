@@ -1,9 +1,12 @@
+extern crate alloc;
+
 pub mod merge;
 pub mod proof;
 pub mod proof_map;
 
 mod common;
 
+use alloc::boxed::Box;
 use common::split_slice;
 use merge::Merge;
 use proof::ProofElem;

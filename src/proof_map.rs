@@ -1,8 +1,9 @@
 use super::common::{split_range, split_tuple_as_range};
 use super::merge::Merge;
 use super::proof::ProofElem;
+use alloc::{boxed::Box, collections::BTreeMap, vec::Vec};
 use core::ops::Range;
-use std::collections::BTreeMap;
+use core::prelude::v1::*;
 
 pub struct HashCache<T> {
     cache: BTreeMap<(usize, usize), T>,
