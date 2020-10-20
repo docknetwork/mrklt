@@ -1,3 +1,29 @@
+//! ```
+//! # // This is a dummy hash function. Don't use this!
+//! # fn hash(c: &[&[u8]]) -> [u8; 32] {
+//! #     let a = c.iter().map(|a| *a).flatten().cloned().fold(0, u8::wrapping_add);
+//! #     [a; 32]
+//! # }
+//! struct MyHash;
+//!
+//! impl crate::Merge for MyHash {
+//!     type Hash = [u8; 32];
+//!
+//!     fn leaf(leaf: &[u8; 32]) -> [u8; 32] {
+//!         hash(&[leaf])
+//!     }
+//!
+//!     fn merge(left: &[u8; 32], right: &[u8; 32]) -> [u8; 32] {
+//!         hash(&[left, right])
+//!     }
+//! }
+//!
+//! let leaves = [[1u8; 32], [2u8; 32], [1u8; 32], [3u8; 32]];
+//! let root = compute_root::<MyHash>(&leaves);
+//! let proof = create_proof::<MyHash>(1, &leaves);
+//! assert_eq!(root, verify_proof::<MyHash>(&leaves[1], &proof));
+//! ```
+
 extern crate alloc;
 
 pub mod merge;
@@ -11,6 +37,8 @@ use common::split_slice;
 use merge::Merge;
 use proof::ProofElem;
 
+/// Deterministically compute a Merkle root for an ordered list of leaves.
+///
 /// # Panics
 ///
 /// Panics if length of leaves is 0.
@@ -25,6 +53,8 @@ pub fn compute_root<M: Merge>(leaves: &[M::Hash]) -> M::Hash {
     }
 }
 
+/// Create the proof of inclusion for the indexed leaf.
+///
 /// # Panics
 ///
 /// Panics if leaf_index is >= leaves.len().
@@ -36,17 +66,11 @@ where
     a.create_proof(leaf_index)
 }
 
-/// Check whether proof proves leaf to be in root.
-pub fn verify_proof<M: Merge>(leaf: &M::Hash, root: &M::Hash, proof: &[ProofElem<M::Hash>]) -> bool
-where
-    M::Hash: Eq,
-{
-    proof
-        .iter()
-        .fold(M::leaf(leaf), |subroot, proof_element| {
-            proof_element.merge::<M>(&subroot)
-        })
-        .eq(root)
+/// Calculate the expected Merkle root given the a leaf and its proof.
+pub fn verify_proof<M: Merge>(leaf: &M::Hash, proof: &[ProofElem<M::Hash>]) -> M::Hash {
+    proof.iter().fold(M::leaf(leaf), |subroot, proof_element| {
+        proof_element.merge::<M>(&subroot)
+    })
 }
 
 #[cfg(test)]

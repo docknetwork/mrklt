@@ -1,3 +1,5 @@
+//! Lower level interface that allows creating proofs without needing to recompute hashes.
+
 use super::common::{split_range, split_tuple_as_range};
 use super::merge::Merge;
 use super::proof::ProofElem;
@@ -134,7 +136,7 @@ mod test {
             assert!(root == &compute_root::<M>(&leaves));
             for (index, leaf) in leaves.iter().enumerate() {
                 let proof = hc.create_proof(index);
-                assert!(verify_proof::<M>(leaf, root, &proof));
+                assert!(&verify_proof::<M>(leaf, &proof) == root);
             }
 
             // expected properties of hc
