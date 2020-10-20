@@ -15,11 +15,11 @@ pub enum ElemFromStrErr<T: FromStr> {
 impl<T: FromStr> FromStr for Elem<T> {
     type Err = ElemFromStrErr<T>;
     fn from_str(a: &str) -> Result<Self, ElemFromStrErr<T>> {
-        if a.starts_with("l") {
+        if a.starts_with('l') {
             T::from_str(&a[1..])
                 .map(Self::Left)
                 .map_err(ElemFromStrErr::Inner)
-        } else if a.starts_with("r") {
+        } else if a.starts_with('r') {
             T::from_str(&a[1..])
                 .map(Self::Right)
                 .map_err(ElemFromStrErr::Inner)

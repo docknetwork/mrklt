@@ -18,18 +18,18 @@ enum HashAlg {
 impl FromStr for HashAlg {
     type Err = &'static str;
     fn from_str(a: &str) -> Result<Self, &'static str> {
-        Ok(match a {
-            "blake2" => Self::Blake2,
-            "groestl" => Self::Groestl,
-            "ripemd160" => Self::Ripemd160,
-            "ripemd320" => Self::Ripemd320,
-            "sha2" => Self::Sha2,
-            "sha3" => Self::Sha3,
-            "whirlpool" => Self::Whirlpool,
-            _ => Err(
-                "alg must be one of: blake2, groestl, ripemd160, ripemd320, sha2, sha3, whirlpool",
-            )?,
-        })
+        let err =
+            "alg must be one of: blake2, groestl, ripemd160, ripemd320, sha2, sha3, whirlpool";
+        match a {
+            "blake2" => Ok(Self::Blake2),
+            "groestl" => Ok(Self::Groestl),
+            "ripemd160" => Ok(Self::Ripemd160),
+            "ripemd320" => Ok(Self::Ripemd320),
+            "sha2" => Ok(Self::Sha2),
+            "sha3" => Ok(Self::Sha3),
+            "whirlpool" => Ok(Self::Whirlpool),
+            _ => Err(err),
+        }
     }
 }
 
