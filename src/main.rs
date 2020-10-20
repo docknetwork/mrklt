@@ -1,10 +1,8 @@
-extern crate alloc;
-
 mod proofelem;
 
-use alloc::string::ToString;
 use core::str::FromStr;
 use proofelem::Elem;
+use std::string::ToString;
 use structopt::StructOpt;
 
 enum HashAlg {

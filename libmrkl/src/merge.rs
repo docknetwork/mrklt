@@ -1,6 +1,8 @@
 /// This trait can be implemented to allow, or to disallow second preimage attacks.
 ///
 /// ```rust
+/// use libmrkl::Merge;
+///
 /// impl Merge for BlockSecondPreimage {
 ///     type Hash = [u8; 32];
 ///
@@ -16,13 +18,13 @@
 /// impl Merge for AllowSecondPreimage {
 /// # type Hash = ();
 /// # /*
-///   ...
+///     ...
 /// # */
 ///     fn leaf(leaf: &Self::Hash) -> Self::Hash {
 ///         leaf.clone()
 ///     }
 /// # /*
-///   ...
+///     ...
 /// # */
 /// # fn merge(left: &Self::Hash, right: &Self::Hash) -> Self::Hash {
 /// #     unimplemented!()
@@ -58,7 +60,6 @@
 /// # fn cat_hash<A: Any>(a: &A, b: &A) -> A {
 /// #     unimplemented!()
 /// # }
-/// # use mrkl::merge::Merge;
 /// # use core::any::Any;
 /// ```
 pub trait Merge {

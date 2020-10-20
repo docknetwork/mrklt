@@ -107,12 +107,11 @@ fn populate<M: Merge>(
 
 #[cfg(test)]
 mod test {
-    use super::super::compute_root;
-    use super::super::verify_proof;
     use super::*;
+    use crate::{compute_root, verify_proof};
+    use alloc::{format, string::String};
     use blake2::{Blake2s, Digest};
-    use rand::distributions::Distribution;
-    use rand::distributions::Standard;
+    use rand::distributions::{Distribution, Standard};
 
     fn intersection(a: &Range<usize>, b: &Range<usize>) -> Range<usize> {
         let start = a.start.max(b.start);

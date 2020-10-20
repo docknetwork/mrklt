@@ -4,9 +4,11 @@
 //! #     let a = c.iter().map(|a| *a).flatten().cloned().fold(0, u8::wrapping_add);
 //! #     [a; 32]
 //! # }
+//! use libmrkl::{compute_root, create_proof, Merge, verify_proof};
+//!
 //! struct MyHash;
 //!
-//! impl crate::Merge for MyHash {
+//! impl Merge for MyHash {
 //!     type Hash = [u8; 32];
 //!
 //!     fn leaf(leaf: &[u8; 32]) -> [u8; 32] {
@@ -24,17 +26,18 @@
 //! assert_eq!(root, verify_proof::<MyHash>(&leaves[1], &proof));
 //! ```
 
+#![no_std]
+
 extern crate alloc;
 
-pub mod merge;
+mod common;
+mod merge;
 pub mod proof;
 pub mod proof_map;
 
-mod common;
-
 use alloc::boxed::Box;
 use common::split_slice;
-use merge::Merge;
+pub use merge::Merge;
 use proof::ProofElem;
 
 /// Deterministically compute a Merkle root for an ordered list of leaves.

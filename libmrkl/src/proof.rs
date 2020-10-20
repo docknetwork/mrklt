@@ -1,5 +1,6 @@
 use super::merge::Merge;
 
+/// A Merkle proof is a list of ProofElement.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ProofElem<T> {
