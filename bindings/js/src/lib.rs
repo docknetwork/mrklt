@@ -1,4 +1,4 @@
-use libmrkl::proof::ProofElem;
+use mrklt::proof::ProofElem;
 use wasm_bindgen::prelude::{wasm_bindgen, JsValue};
 
 /// Accepts a list of blake2s hashes packed into a single array. Returns the 32 byte root hash.
@@ -9,7 +9,7 @@ use wasm_bindgen::prelude::{wasm_bindgen, JsValue};
 #[wasm_bindgen]
 pub fn compute_root(leaves: &[u8]) -> Box<[u8]> {
     let leaves = split32(leaves);
-    let root = libmrkl::compute_root::<Blake2sSpr>(&leaves);
+    let root = mrklt::compute_root::<Blake2sSpr>(&leaves);
     Box::new(root)
 }
 
@@ -19,7 +19,7 @@ pub fn compute_root(leaves: &[u8]) -> Box<[u8]> {
 #[wasm_bindgen]
 pub fn create_proof(leaf_index: usize, leaves: &[u8]) -> JsValue {
     let leaves = split32(leaves);
-    let proof = libmrkl::create_proof::<Blake2sSpr>(leaf_index, &leaves);
+    let proof = mrklt::create_proof::<Blake2sSpr>(leaf_index, &leaves);
     JsValue::from_serde(&proof).unwrap()
 }
 
@@ -33,7 +33,7 @@ pub fn create_proof(leaf_index: usize, leaves: &[u8]) -> JsValue {
 pub fn verify_proof(leaf: &[u8], proof: JsValue) -> Box<[u8]> {
     let leaf = to_fixed(leaf);
     let proof: Box<[ProofElem<[u8; 32]>]> = proof.into_serde().unwrap();
-    let root = libmrkl::verify_proof::<Blake2sSpr>(&leaf, &proof);
+    let root = mrklt::verify_proof::<Blake2sSpr>(&leaf, &proof);
     Box::new(root)
 }
 
@@ -42,7 +42,7 @@ pub fn verify_proof(leaf: &[u8], proof: JsValue) -> Box<[u8]> {
 /// Blake2s hash with leaves double-hashed to resist second preimage attacks.
 enum Blake2sSpr {}
 
-impl libmrkl::Merge for Blake2sSpr {
+impl mrklt::Merge for Blake2sSpr {
     type Hash = [u8; 32];
 
     fn leaf(l: &[u8; 32]) -> [u8; 32] {

@@ -1,7 +1,7 @@
 /// This trait can be implemented to allow, or to disallow second preimage attacks.
 ///
 /// ```rust
-/// use libmrkl::Merge;
+/// use mrklt::Merge;
 ///
 /// impl Merge for BlockSecondPreimage {
 ///     type Hash = [u8; 32];

@@ -4,7 +4,7 @@
 //! #     let a = c.iter().map(|a| *a).flatten().cloned().fold(0, u8::wrapping_add);
 //! #     [a; 32]
 //! # }
-//! use libmrkl::{compute_root, create_proof, Merge, verify_proof};
+//! use mrklt::{compute_root, create_proof, Merge, verify_proof};
 //!
 //! struct MyHash;
 //!
