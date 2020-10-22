@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Andrew Dirksen <andrew@dirksen.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
+description = """
+Simple Merkle tree lib to: compute root, generate proof and verify proof.
+"""
 
 [dependencies]
 serde = { version = "1.0", optional = true, default-features = false, features = ["derive"] }
