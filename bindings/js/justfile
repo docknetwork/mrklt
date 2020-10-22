@@ -1,0 +1,26 @@
+# https://github.com/casey/just
+
+# build wasm and js bindings
+build:
+  rm -rf pkg || true
+  wasm-pack build --target nodejs --out-dir pkg --out-name index
+  wasm-pack build --target bundler --out-dir pkg --out-name index_bundle
+  cp package.json pkg/package.json
+
+# install js test depenedenicies, requires yarn
+test-init:
+  cd testjs; yarn
+
+# run js tests but assume `js-test-init` and `js` were already run
+test-light:
+  cd testjs; yarn test
+
+# run js tests
+test:
+  just build
+  just test-init
+  just test-light
+
+# remove artifacts from js bindings and tests
+clean:
+  rm -r pkg testjs/dist testjs/node_modules || true
