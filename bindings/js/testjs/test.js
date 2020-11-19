@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { compute_root, create_proof, verify_proof } from 'mrklj';
+import { compute_root, create_proof, verify_proof, construct } from 'mrklj';
 import BLAKE2s from 'blake2s-js';
 import assert from 'assert';
 import deepEqual from 'deep-equal';
@@ -114,7 +114,25 @@ tests([
       ]
     ]);
   }],
+  ['construct() has the same result as compute_root() together with create_proof()', () => {
+    for (let i = 1; i < 30; i++) {
+      const leaf_hashes = randoLeaves(i);
+      const lh_packed = pack32(leaf_hashes);
+      const root = compute_root(lh_packed);
+      const proofs = leaf_hashes.map((_, i) => create_proof(i, lh_packed));
+      const [otherRoot, otherProofs] = construct(lh_packed);
+      expect([[...root], proofs]).to.deep.eq([otherRoot, otherProofs]);
+    }
+  }],
 ]);
+
+function randoLeaves(count) {
+  return Array(count).fill(undefined).map(() => randoHash());
+}
+
+function randoHash() {
+  return new Uint8Array(Array(32).fill(undefined).map(() => Math.floor(Math.random() * 256)));
+}
 
 function utf8(str) {
   return new TextEncoder("utf-8").encode(str);
