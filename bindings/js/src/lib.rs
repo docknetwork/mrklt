@@ -1,25 +1,27 @@
 use mrklt::proof::ProofElem;
 use wasm_bindgen::prelude::{wasm_bindgen, JsValue};
 
-/// Accepts a list of blake2s hashes packed into a single array. Returns the 32 byte root hash.
+/// Accepts a list of blake2b-256 hashes packed into a single array. Returns the 32 byte root hash.
 ///
 /// # Panics
 ///
 /// Panics if the input value is not a multiple of 32.
+/// Panics if number of leaves is 0.
 #[wasm_bindgen]
 pub fn compute_root(leaves: &[u8]) -> Box<[u8]> {
     let leaves = split32(leaves);
-    let root = mrklt::compute_root::<Blake2sSpr>(&leaves);
+    let root = mrklt::compute_root::<Blake2b256Spr>(&leaves);
     Box::new(root)
 }
 
 /// # Panics
 ///
 /// Panics if the packed "leaves" array length is not a multiple of 32.
+/// Panics if leaf_index is >= leaves.len().
 #[wasm_bindgen]
 pub fn create_proof(leaf_index: usize, leaves: &[u8]) -> JsValue {
     let leaves = split32(leaves);
-    let proof = mrklt::create_proof::<Blake2sSpr>(leaf_index, &leaves);
+    let proof = mrklt::create_proof::<Blake2b256Spr>(leaf_index, &leaves);
     JsValue::from_serde(&proof).unwrap()
 }
 
@@ -33,35 +35,62 @@ pub fn create_proof(leaf_index: usize, leaves: &[u8]) -> JsValue {
 pub fn verify_proof(leaf: &[u8], proof: JsValue) -> Box<[u8]> {
     let leaf = to_fixed(leaf);
     let proof: Box<[ProofElem<[u8; 32]>]> = proof.into_serde().unwrap();
-    let root = mrklt::verify_proof::<Blake2sSpr>(&leaf, &proof);
+    let root = mrklt::verify_proof::<Blake2b256Spr>(&leaf, &proof);
     Box::new(root)
 }
 
-/// Blake2s Second Preimage Resisant
+/// Compute root and create proofs for every leaf. This is much more efficient than calling
+/// [`compute_root`] followed by [`create_proof`] for every element of the tree.
 ///
-/// Blake2s hash with leaves double-hashed to resist second preimage attacks.
-enum Blake2sSpr {}
+/// Accepts a list of blake2b-256 hashes packed into a single array. Returns the 32 byte root hash
+/// and a list of proofs as a tuple.
+///
+/// # Panics
+///
+/// Panics if the input value is not a multiple of 32.
+/// Panics if number of leaves is 0.
+#[wasm_bindgen]
+pub fn construct(leaves: &[u8]) -> JsValue {
+    let leaves = split32(leaves);
+    let a = mrklt::proof_map::HashCache::from_leaves::<Blake2b256Spr>(&leaves);
+    let proofs: Vec<Box<[ProofElem<[u8; 32]>]>> = leaves
+        .iter()
+        .enumerate()
+        .map(|(i, _)| a.create_proof(i))
+        .collect();
+    JsValue::from_serde(&(a.root(), proofs)).expect("serialization of return value failed")
+}
 
-impl mrklt::Merge for Blake2sSpr {
+/// Blake2b256 Second Preimage Resisant
+///
+/// Blake2b256 hash with leaves double-hashed to resist second preimage attacks.
+enum Blake2b256Spr {}
+
+impl mrklt::Merge for Blake2b256Spr {
     type Hash = [u8; 32];
 
     fn leaf(l: &[u8; 32]) -> [u8; 32] {
         // leaf is already hashed, but we hash it again resist SPA
-        blake2s(&[l])
+        blake2b256(&[l])
     }
 
     fn merge(l: &[u8; 32], r: &[u8; 32]) -> [u8; 32] {
-        blake2s(&[l, r])
+        blake2b256(&[l, r])
     }
 }
 
-fn blake2s(bs: &[&[u8]]) -> [u8; 32] {
-    use blake2::{Blake2s, Digest};
-    let mut hasher = Blake2s::new();
+fn blake2b256(bs: &[&[u8]]) -> [u8; 32] {
+    use blake2::{
+        digest::{Update, VariableOutput},
+        VarBlake2b,
+    };
+    let mut hasher = VarBlake2b::new(32).unwrap();
     for b in bs {
         hasher.update(&b);
     }
-    to_fixed(&hasher.finalize())
+    let mut ret = [0u8; 32];
+    hasher.finalize_variable(|digest| ret = to_fixed(digest));
+    ret
 }
 
 /// Panics if bs is not 32 bytes long.
@@ -91,20 +120,3 @@ fn split32(bs: &[u8]) -> Vec<[u8; 32]> {
     );
     bs.chunks(32).map(to_fixed).collect()
 }
-
-// # Potential Optimization
-//
-// It would save cpu cycles to generate all proofs in a batch.
-//
-// ```
-// #[wasm_bindgen]
-// pub fn construct_tree(Vec<Leaves>) -> (Hash, Vec<Proof>);
-// ```
-//
-// I'm going to resist the urge to optimize right now but an api of that form would reduce the
-// required hashes for computing all proofs and the root.
-//
-// let `l` be the number of leaves.
-//
-// `(l-1) * (l+1)` is the current number of hashes required. Batching would change that number to
-// `l-1`.

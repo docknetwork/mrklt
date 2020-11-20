@@ -1,13 +1,13 @@
 [package]
 name = "mrklj"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Andrew Dirksen <andrew@dirksen.com>"]
 edition = "2018"
 description = """
 Merkle root generation, merkle proof generation and verification.
 """
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/docknetwork/rify"
+repository = "https://github.com/docknetwork/mrklt"
 readme = "README.md"
 
 [package.metadata.wasm-pack.profile.release]
