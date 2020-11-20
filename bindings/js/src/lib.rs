@@ -1,7 +1,7 @@
 use mrklt::proof::ProofElem;
 use wasm_bindgen::prelude::{wasm_bindgen, JsValue};
 
-/// Accepts a list of blake2s hashes packed into a single array. Returns the 32 byte root hash.
+/// Accepts a list of blake2b-256 hashes packed into a single array. Returns the 32 byte root hash.
 ///
 /// # Panics
 ///
@@ -10,7 +10,7 @@ use wasm_bindgen::prelude::{wasm_bindgen, JsValue};
 #[wasm_bindgen]
 pub fn compute_root(leaves: &[u8]) -> Box<[u8]> {
     let leaves = split32(leaves);
-    let root = mrklt::compute_root::<Blake2sSpr>(&leaves);
+    let root = mrklt::compute_root::<Blake2b256Spr>(&leaves);
     Box::new(root)
 }
 
@@ -21,7 +21,7 @@ pub fn compute_root(leaves: &[u8]) -> Box<[u8]> {
 #[wasm_bindgen]
 pub fn create_proof(leaf_index: usize, leaves: &[u8]) -> JsValue {
     let leaves = split32(leaves);
-    let proof = mrklt::create_proof::<Blake2sSpr>(leaf_index, &leaves);
+    let proof = mrklt::create_proof::<Blake2b256Spr>(leaf_index, &leaves);
     JsValue::from_serde(&proof).unwrap()
 }
 
@@ -35,15 +35,15 @@ pub fn create_proof(leaf_index: usize, leaves: &[u8]) -> JsValue {
 pub fn verify_proof(leaf: &[u8], proof: JsValue) -> Box<[u8]> {
     let leaf = to_fixed(leaf);
     let proof: Box<[ProofElem<[u8; 32]>]> = proof.into_serde().unwrap();
-    let root = mrklt::verify_proof::<Blake2sSpr>(&leaf, &proof);
+    let root = mrklt::verify_proof::<Blake2b256Spr>(&leaf, &proof);
     Box::new(root)
 }
 
 /// Compute root and create proofs for every leaf. This is much more efficient than calling
 /// [`compute_root`] followed by [`create_proof`] for every element of the tree.
 ///
-/// Accepts a list of blake2s hashes packed into a single array. Returns the 32 byte root hash and a
-/// list of proofs as a tuple.
+/// Accepts a list of blake2b-256 hashes packed into a single array. Returns the 32 byte root hash
+/// and a list of proofs as a tuple.
 ///
 /// # Panics
 ///
@@ -52,7 +52,7 @@ pub fn verify_proof(leaf: &[u8], proof: JsValue) -> Box<[u8]> {
 #[wasm_bindgen]
 pub fn construct(leaves: &[u8]) -> JsValue {
     let leaves = split32(leaves);
-    let a = mrklt::proof_map::HashCache::from_leaves::<Blake2sSpr>(&leaves);
+    let a = mrklt::proof_map::HashCache::from_leaves::<Blake2b256Spr>(&leaves);
     let proofs: Vec<Box<[ProofElem<[u8; 32]>]>> = leaves
         .iter()
         .enumerate()
@@ -61,31 +61,36 @@ pub fn construct(leaves: &[u8]) -> JsValue {
     JsValue::from_serde(&(a.root(), proofs)).expect("serialization of return value failed")
 }
 
-/// Blake2s Second Preimage Resisant
+/// Blake2b256 Second Preimage Resisant
 ///
-/// Blake2s hash with leaves double-hashed to resist second preimage attacks.
-enum Blake2sSpr {}
+/// Blake2b256 hash with leaves double-hashed to resist second preimage attacks.
+enum Blake2b256Spr {}
 
-impl mrklt::Merge for Blake2sSpr {
+impl mrklt::Merge for Blake2b256Spr {
     type Hash = [u8; 32];
 
     fn leaf(l: &[u8; 32]) -> [u8; 32] {
         // leaf is already hashed, but we hash it again resist SPA
-        blake2s(&[l])
+        blake2b256(&[l])
     }
 
     fn merge(l: &[u8; 32], r: &[u8; 32]) -> [u8; 32] {
-        blake2s(&[l, r])
+        blake2b256(&[l, r])
     }
 }
 
-fn blake2s(bs: &[&[u8]]) -> [u8; 32] {
-    use blake2::{Blake2s, Digest};
-    let mut hasher = Blake2s::new();
+fn blake2b256(bs: &[&[u8]]) -> [u8; 32] {
+    use blake2::{
+        digest::{Update, VariableOutput},
+        VarBlake2b,
+    };
+    let mut hasher = VarBlake2b::new(32).unwrap();
     for b in bs {
         hasher.update(&b);
     }
-    to_fixed(&hasher.finalize())
+    let mut ret = [0u8; 32];
+    hasher.finalize_variable(|digest| ret = to_fixed(digest));
+    ret
 }
 
 /// Panics if bs is not 32 bytes long.
